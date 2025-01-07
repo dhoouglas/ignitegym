@@ -4,7 +4,7 @@ import { FlatList } from "react-native";
 
 import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
-import { ExerciseCard } from "./ExerciseCard";
+import { ExerciseCard } from "../components/ExerciseCard";
 export function Home() {
   const [exercises, setExercises] = useState([
     "Puxada frontak",
