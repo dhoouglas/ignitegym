@@ -4,7 +4,6 @@ import {
   Icon,
   Text,
   VStack,
-  Image,
   Box,
   useToast,
   ToastTitle,
@@ -24,14 +23,15 @@ import { AppError } from "@utils/AppError";
 import { api } from "@services/api";
 import { ExerciseDTO } from "@dtos/ExerciseDTO";
 import { useEffect, useState } from "react";
-import { isLoading } from "expo-font";
 import { Loading } from "@components/Loading";
+import { Image } from "expo-image";
 
 type RouteParamsProps = {
   exerciseId: string;
 };
 
 export function Exercise() {
+  const [sendingRegister, setSendingRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [exercise, setExercise] = useState<ExerciseDTO>({} as ExerciseDTO);
   const navigation = useNavigation<AppNavigatorRoutesProps>();
@@ -66,6 +66,53 @@ export function Exercise() {
       });
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleExerciseHistoryRegister() {
+    try {
+      setSendingRegister(true);
+
+      await api.post("/history", { exercise_id: exerciseId });
+
+      toast.show({
+        placement: "top",
+        render: () => (
+          <Toast
+            backgroundColor="$green700"
+            action="success"
+            variant="outline"
+            mt="$10"
+          >
+            <ToastTitle color="$white">
+              Parabéns! Exercício registado no seu histórico.
+            </ToastTitle>
+          </Toast>
+        ),
+      });
+
+      navigation.navigate("history");
+    } catch (error) {
+      const isAppError = error instanceof AppError;
+      const title = isAppError
+        ? error.message
+        : "Não foi possível registrar o exercício";
+
+      toast.show({
+        placement: "top",
+        render: () => (
+          <Toast
+            backgroundColor="$red500"
+            action="error"
+            variant="outline"
+            mt="$10"
+          >
+            <ToastTitle color="$white">{title}</ToastTitle>
+          </Toast>
+        ),
+      });
+    } finally {
+      setSendingRegister(false);
     }
   }
 
@@ -109,17 +156,15 @@ export function Exercise() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 32 }}
         >
-          <VStack p="$8">
+          <VStack p="$8" h="$80">
             <Box rounded="$lg" mb="$3" overflow="hidden">
               <Image
                 source={{
                   uri: `${api.defaults.baseURL}/exercise/demo/${exercise?.demo}`,
                 }}
                 alt="Exercicio"
-                resizeMode="cover"
-                rounded="$lg"
-                w="$full"
-                h="$80"
+                contentFit="cover"
+                style={{ width: "100%", height: 320, borderRadius: 8 }}
               />
             </Box>
 
@@ -145,7 +190,11 @@ export function Exercise() {
                 </HStack>
               </HStack>
 
-              <Button title="Marcar como realizado" />
+              <Button
+                title="Marcar como realizado"
+                isLoading={sendingRegister}
+                onPress={handleExerciseHistoryRegister}
+              />
             </Box>
           </VStack>
         </ScrollView>
